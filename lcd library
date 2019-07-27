@@ -1,0 +1,356 @@
+#include "lcd.h"
+//*****************Define Pins********************************************************
+#define enset GpioDataRegs.GPBSET.bit.GPIO40              //define enable pin set
+#define enclear GpioDataRegs.GPBCLEAR.bit.GPIO40          //define enable pin reset
+#define rsset GpioDataRegs.GPBSET.bit.GPIO50              //define rs pin set
+#define rsclear GpioDataRegs.GPBCLEAR.bit.GPIO50          //define rs pin reset
+#define D0SET GpioDataRegs.GPASET.bit.GPIO30              //define D0 pin set
+#define D0CLEAR GpioDataRegs.GPACLEAR.bit.GPIO30          //define D0 pin reset
+#define D1SET GpioDataRegs.GPASET.bit.GPIO28              //define D1 pin set
+#define D1CLEAR GpioDataRegs.GPACLEAR.bit.GPIO28          //define D1 pin reset
+#define D2SET GpioDataRegs.GPBSET.bit.GPIO51              //define D2 pin set
+#define D2CLEAR GpioDataRegs.GPBCLEAR.bit.GPIO51          //define D2 pin reset
+#define D3SET GpioDataRegs.GPASET.bit.GPIO22              //define D3 pin set
+#define D3CLEAR GpioDataRegs.GPACLEAR.bit.GPIO22          //define D3 pin reset
+#define D4SET GpioDataRegs.GPASET.bit.GPIO20              //define D4 pin set
+#define D4CLEAR GpioDataRegs.GPACLEAR.bit.GPIO20          //define D4 pin reset
+#define D5SET GpioDataRegs.GPASET.bit.GPIO16              //define D5 pin set
+#define D5CLEAR GpioDataRegs.GPACLEAR.bit.GPIO16          //define D5 pin reset
+#define D6SET GpioDataRegs.GPASET.bit.GPIO24              //define D6 pin set
+#define D6CLEAR GpioDataRegs.GPACLEAR.bit.GPIO24          //define D6 pin reset
+#define D7SET GpioDataRegs.GPASET.bit.GPIO15              //define D7 pin set
+#define D7CLEAR GpioDataRegs.GPACLEAR.bit.GPIO15          //define D7 pin reset
+//***************************************************************************************
+//*********************Prototype*********************************************************
+void InitializeLCD(void);
+void WriteCommandLCD(unsigned char CommandByte);
+void WriteDataLCD(unsigned char DataByte);
+void LCDDelay(void);
+void longLCDDelay(void);
+void SendByte(unsigned char Value);
+void CursorON(void);
+void CursorOFF(void);
+void CursorShiftLeft(void);
+void CursorShiftRight(void);
+void lcdClear(void);
+void positionOne(void);
+void positionTwo(void);
+void positionThree(void);
+void positionFour(void);
+void DisplayLCD(char LineNumber,int pos,char *Message);
+//***********************************************************************************
+
+void InitializeLCD(void)
+{
+    enset = 1;              //set enable pin
+	longLCDDelay();
+	WriteCommandLCD(0x38);	//8bit mode		
+	longLCDDelay();
+	WriteCommandLCD(0x38);			
+	LCDDelay();				        
+	WriteCommandLCD(0x38);			
+	LCDDelay();
+	WriteCommandLCD(0x08);			//Command to off cursor,display off
+	WriteCommandLCD(0x01);			//Command to Clear LCD
+	longLCDDelay();
+	WriteCommandLCD(0x06);			//Command for setting entry mode
+	WriteCommandLCD(0x0f);			//Command to on cursor,blink cursor
+	WriteCommandLCD(0x02);			//Command return the cursor to home
+	longLCDDelay();
+}
+
+void WriteCommandLCD(unsigned char CommandByte)
+{
+    rsclear = 1;   //clear reset pin
+    SendByte(CommandByte);
+	LCDDelay();				        //Small delay
+}
+
+void SendByte(unsigned char Value)
+{
+	unsigned char temp;
+
+
+	if((Value & 0x01) == 0x01){
+	    D0SET = 1;}
+	    else{
+	        D0CLEAR = 1;
+	    }
+	if((Value & 0x02) == 0x02){
+        D1SET = 1;}
+	else{
+	    D1CLEAR = 1;}
+	if((Value & 0x04) == 0x04){
+	    D2SET = 1;}
+	else{
+	    D2CLEAR = 1;}
+	if((Value & 0x08) == 0x08){
+	    D3SET = 1;}
+	else{
+	    D3CLEAR = 1;}
+	if((Value & 0x10) == 0x10){
+	    D4SET = 1;}
+	else{
+	    D4CLEAR = 1;}
+	if((Value & 0x20) == 0x20){
+	    D5SET = 1;}
+	else{
+	    D5CLEAR = 1;}
+	if((Value & 0x40) == 0x40){
+	    D6SET = 1;}
+	else{
+	    D6CLEAR = 1;}
+	if((Value & 0x80) == 0x80){
+	    D7SET = 1;}
+	else{
+	    D7CLEAR = 1;}
+	 enset = 1;  //set enable pin
+	for(temp=0;temp<5; temp++);
+	enclear = 1; //clear enable pin
+	LCDDelay();				           
+
+}
+
+
+void WriteDataLCD(unsigned char DataByte)
+{
+    rsset = 1; //set reset pin
+	SendByte(DataByte);
+	LCDDelay();				            
+}
+
+
+
+void LCDDelay(void) //normal delay
+{
+	DELAY_US(50);
+}
+
+void long2LCDDelay(void) //long delay
+{
+	DELAY_US(1500);
+}
+
+
+void CursorON(void)
+{
+	WriteCommandLCD(0x0f);			//Command to switch on cursor
+}
+
+
+
+
+void CursorOFF(void)
+{
+	WriteCommandLCD(0x0c);			//Command to switch off cursor
+}
+
+void CursorShiftLeft(void){ //Command to shift the cursor to the left side
+    WriteCommandLCD(0x10);
+}
+void CursorShiftRight(void){ //Command to shift the cursor to the right side
+    WriteCommandLCD(0x14);
+}
+
+void lcdClear(void){
+    WriteCommandLCD(0x01);          //lcd clear
+}
+void positionOne(void){
+    WriteCommandLCD(0x80);           //pos one
+}
+void positionTwo(void){
+    WriteCommandLCD(0xC0);         //pos two
+}
+void positionThree(void){
+    WriteCommandLCD(0x94);       //pos three
+}
+void positionFour(void){
+    WriteCommandLCD(0xD4);  //pos fourth
+}
+
+void DisplayLCD(char LineNumber,int pos,char *Message){
+    int a;
+    if(LineNumber ==1){   //First Line
+        WriteCommandLCD(0x80);
+        switch(pos){
+        case 0:
+            WriteCommandLCD(0x80);
+            break;
+        case 1:
+            WriteCommandLCD(0x81);
+            break;
+        case 2:
+            WriteCommandLCD(0x82);
+            break;
+        case 3:
+            WriteCommandLCD(0x83);
+            break;
+        case 4:
+            WriteCommandLCD(0x84);
+            break;
+        case 5:
+            WriteCommandLCD(0x85);
+            break;
+        case 6:
+            WriteCommandLCD(0x86);
+            break;
+        case 7:
+            WriteCommandLCD(0x87);
+            break;
+        case 8:
+            WriteCommandLCD(0x88);
+            break;
+        case 9:
+            WriteCommandLCD(0x89);
+            break;
+        case 10:
+            WriteCommandLCD(0x8A);
+            break;
+        case 11:
+            WriteCommandLCD(0x8B);
+            break;
+        case 12:
+            WriteCommandLCD(0x8C);
+            break;
+        case 13:
+            WriteCommandLCD(0x8D);
+            break;
+        case 14:
+            WriteCommandLCD(0x8E);
+            break;
+        case 15:
+            WriteCommandLCD(0x8F);
+            break;
+        case 16:
+            WriteCommandLCD(0x90);
+            break;
+        case 17:
+            WriteCommandLCD(0x91);
+            break;
+        case 18:
+            WriteCommandLCD(0x92);
+            break;
+        case 19:
+            WriteCommandLCD(0x93);
+            break;
+        default:
+            WriteCommandLCD(0x80);
+            break;
+        }
+    }
+    else if(LineNumber ==2){   //Second line
+        WriteCommandLCD(0xC0);
+        if(pos==0){        //position one
+            WriteCommandLCD(0xC0);
+        }else if(pos==1){  //position two
+            WriteCommandLCD(0xC1);
+        }else if(pos==2){  //position three
+            WriteCommandLCD(0xC2);
+        }else if(pos==3){  //position four
+            WriteCommandLCD(0xC3);
+        }else if(pos==4){  //position five
+            WriteCommandLCD(0xC4);
+        }else if(pos==5){  //position six
+            WriteCommandLCD(0xC5);
+        }else if(pos==6){  //position seven
+            WriteCommandLCD(0xC6);
+        }else if(pos==7){  //position eight
+            WriteCommandLCD(0xC7);
+        }else if(pos==8){  //position nine
+            WriteCommandLCD(0xC8);
+        }else if(pos==9){  //position ten
+            WriteCommandLCD(0xC9);
+        }else if(pos==10){  //position eleven
+            WriteCommandLCD(0xCA);
+        }else if(pos==11){  //position twelve
+            WriteCommandLCD(0xCB);
+        }else if(pos==12){  //position thirteen
+            WriteCommandLCD(0xCC);
+        }else if(pos==13){  //position fourteen
+            WriteCommandLCD(0xCD);
+        }else if(pos==14){  //position fifteen
+            WriteCommandLCD(0xCE);
+        }else if(pos==15){  //position sixteen
+            WriteCommandLCD(0xCF);
+        }
+    }
+    else if(LineNumber ==3){
+
+        WriteCommandLCD(0x94);
+        if(pos==0){     //position one
+            WriteCommandLCD(0x94);
+        }else if(pos==1){  //position two
+            WriteCommandLCD(0x95);
+        }else if(pos==2){  //position three
+            WriteCommandLCD(0x96);
+        }else if(pos==3){  //position four
+            WriteCommandLCD(0x97);
+        }else if(pos==4){  //position five
+            WriteCommandLCD(0x98);
+        }else if(pos==5){  //position six
+            WriteCommandLCD(0x99);
+        }else if(pos==6){  //position seven
+            WriteCommandLCD(0x9A);
+        }else if(pos==7){  //position eight
+            WriteCommandLCD(0x9B);
+        }else if(pos==8){  //position nine
+            WriteCommandLCD(0x9C);
+        }else if(pos==9){  //position ten
+            WriteCommandLCD(0x9D);
+        }else if(pos==10){  //position eleven
+            WriteCommandLCD(0x9E);
+        }else if(pos==11){  //position twelve
+            WriteCommandLCD(0x9F);
+        }else if(pos==12){  //position thirteen
+            WriteCommandLCD(0xA0);
+        }else if(pos==13){  //position fourteen
+            WriteCommandLCD(0xA1);
+        }else if(pos==14){  //position fifteen
+            WriteCommandLCD(0xA2);
+        }else if(pos==15){  //position sixteen
+            WriteCommandLCD(0xA3);
+        }
+    }
+    else if(LineNumber ==4){
+        WriteCommandLCD(0xD4);
+        if(pos==0){        //position one
+            WriteCommandLCD(0xD4);
+        }else if(pos==1){  //position two
+            WriteCommandLCD(0xD5);
+        }else if(pos==2){  //position three
+            WriteCommandLCD(0xD6);
+        }else if(pos==3){  //position four
+            WriteCommandLCD(0xD7);
+        }else if(pos==4){  //position five
+            WriteCommandLCD(0xD8);
+        }else if(pos==5){  //position six
+            WriteCommandLCD(0xD9);
+        }else if(pos==6){  //position seven
+            WriteCommandLCD(0xDA);
+        }else if(pos==7){  //position eight
+            WriteCommandLCD(0xDB);
+        }else if(pos==8){  //position nine
+            WriteCommandLCD(0xDC);
+        }else if(pos==9){  //position ten
+            WriteCommandLCD(0xDD);
+        }else if(pos==10){  //position eleven
+            WriteCommandLCD(0xDE);
+        }else if(pos==11){  //position twelve
+            WriteCommandLCD(0xDF);
+        }else if(pos==12){  //position thirteen
+            WriteCommandLCD(0xE0);
+        }else if(pos==13){  //position fourteen
+            WriteCommandLCD(0xE1);
+        }else if(pos==14){  //position fifteen
+            WriteCommandLCD(0xE2);
+        }else if(pos==15){  //position sixteen
+            WriteCommandLCD(0xE3);
+        }
+    }
+    for(a=0;a<20;a++){
+        WriteDataLCD(*Message);     //Display a character
+        Message++;                  //Increment pointer
+        }
+    return;
+    }
+
